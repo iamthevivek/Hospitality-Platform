@@ -3,11 +3,26 @@ import axios from 'axios';
 let getTokenFn = null;
 export const setAuthTokenGetter = (fn) => { getTokenFn = fn; };
 
+export const resolveBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.API_BASE_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
+    return envUrl.trim().replace(/\/+$/, '');
+  }
+  // When running on Vercel preview or production, default directly to the live Render backend
+  if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname.includes('vercel.app')) {
+    return 'https://hospitality-platform-xjq9.onrender.com';
+  }
+  return 'http://localhost:8080';
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  baseURL: resolveBaseUrl(),
 });
 
 api.interceptors.request.use(async (config) => {
+  if (!config.baseURL || config.baseURL === 'http://localhost:8080') {
+    config.baseURL = resolveBaseUrl();
+  }
   // Do NOT attach Bearer token to public endpoints or auth endpoints
   const isPublic = config.url?.startsWith('/api/public');
   const isAuth = config.url?.startsWith('/api/auth');
@@ -63,10 +78,7 @@ export const getAvailableRooms = (hotelId, params) =>
 export const getHotelReviews = (hotelId) =>
   api.get(`/api/public/hotels/${hotelId}/reviews`).then(unwrapList);
 
-export const sendAiChat = (message, history = []) =>
-  api.post('/api/public/ai/chat', { message, history }).then(unwrap);
-
-// ─── Authenticated: Bookings ──────────────────────────────────
+// ─── Bookings ─────────────────────────────────────────────────
 export const createBooking = (data) =>
   api.post('/api/bookings', data).then(unwrap);
 
@@ -79,21 +91,21 @@ export const getBookingById = (id) =>
 export const cancelBooking = (id) =>
   api.put(`/api/bookings/${id}/cancel`).then(unwrap);
 
-// ─── Authenticated: Payments ──────────────────────────────────
-export const createPaymentIntent = (bookingId) =>
-  api.post('/api/payments/create-intent', { bookingId }).then(unwrap);
+// ─── Payments ─────────────────────────────────────────────────
+export const createPaymentIntent = (data) =>
+  api.post('/api/payments/create-intent', data).then(unwrap);
 
-export const confirmDemoPayment = (bookingId) =>
-  api.post(`/api/payments/confirm-demo/${bookingId}`).then(unwrap);
+export const confirmDemoPayment = (data) =>
+  api.post('/api/payments/confirm-demo', data).then(unwrap);
 
-// ─── Authenticated: Reviews ───────────────────────────────────
+// ─── Reviews ──────────────────────────────────────────────────
 export const createReview = (data) =>
   api.post('/api/reviews', data).then(unwrap);
 
-export const deleteReview = (reviewId) =>
-  api.delete(`/api/reviews/${reviewId}`).then(unwrap);
+export const deleteReview = (id) =>
+  api.delete(`/api/reviews/${id}`).then(unwrap);
 
-// ─── Authenticated: Users ─────────────────────────────────────
+// ─── User Profile ─────────────────────────────────────────────
 export const getProfile = () =>
   api.get('/api/users/me').then(unwrap);
 
@@ -141,5 +153,8 @@ export const authGetMe = () =>
 export const authLogout = () =>
   api.post('/api/auth/logout').then(unwrap);
 
-export default api;
+// ─── AI Concierge ─────────────────────────────────────────────
+export const sendAiChat = (message, history) =>
+  api.post('/api/public/ai/chat', { message, history }).then(unwrap);
 
+export default api;
