@@ -23,7 +23,16 @@ export function AuthProvider({ children }) {
     let isMounted = true;
     const initAuth = async () => {
       const savedToken = localStorage.getItem('stayease_token');
+      const savedUserStr = localStorage.getItem('stayease_user');
+
       if (savedToken) {
+        if (savedUserStr && isMounted) {
+          try {
+            const parsed = JSON.parse(savedUserStr);
+            setUser(parsed);
+          } catch (e) {}
+        }
+
         try {
           const profile = await authGetMe();
           if (isMounted && profile) {
@@ -34,14 +43,19 @@ export function AuthProvider({ children }) {
             }
           }
         } catch (err) {
-          console.warn('Stored session invalid or expired:', err?.response?.data?.message || err?.message);
-          // Token expired or invalid
-          if (isMounted) {
-            localStorage.removeItem('stayease_token');
-            localStorage.removeItem('stayease_user');
-            localStorage.removeItem('role');
-            setToken(null);
-            setUser(null);
+          // ONLY clear session if server explicitly returns 401 Unauthorized or 403 Forbidden
+          const status = err?.response?.status;
+          if (status === 401 || status === 403) {
+            console.warn('Session expired (401/403): clearing login state');
+            if (isMounted) {
+              localStorage.removeItem('stayease_token');
+              localStorage.removeItem('stayease_user');
+              localStorage.removeItem('role');
+              setToken(null);
+              setUser(null);
+            }
+          } else {
+            console.warn('Session verification notice (server not reachable or busy, preserving session):', err?.message);
           }
         }
       }

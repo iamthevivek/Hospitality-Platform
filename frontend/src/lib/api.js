@@ -23,10 +23,10 @@ api.interceptors.request.use(async (config) => {
   if (!config.baseURL || config.baseURL === 'http://localhost:8080') {
     config.baseURL = resolveBaseUrl();
   }
-  // Do NOT attach Bearer token to public endpoints or auth endpoints
+  // Skip Bearer token ONLY for public or login/register endpoints
   const isPublic = config.url?.startsWith('/api/public');
-  const isAuth = config.url?.startsWith('/api/auth');
-  if (!isPublic && !isAuth) {
+  const isLoginOrRegister = config.url?.includes('/api/auth/login') || config.url?.includes('/api/auth/register');
+  if (!isPublic && !isLoginOrRegister) {
     try {
       let token = null;
       if (getTokenFn) {

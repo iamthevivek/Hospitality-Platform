@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useUser } from '../lib/auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Calendar, Clock, IndianRupee, Loader2 } from 'lucide-react';
@@ -154,12 +155,12 @@ export default function DashboardPage() {
               ? "You haven't made any bookings yet. Start exploring luxury hotels worldwide and across India!"
               : `You have no ${activeTab.toLowerCase()} bookings in your account.`}
           </p>
-          <a
-            href="/hotels"
-            className="inline-flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-xl hover:bg-primary-700 transition font-medium shadow-sm"
+          <Link
+            to="/hotels"
+            className="inline-flex items-center gap-2 bg-[#0d7e8a] hover:bg-[#0b6b75] text-white px-6 py-3 rounded-xl transition font-medium shadow-sm"
           >
             Explore Hotels
-          </a>
+          </Link>
         </div>
       ) : (
         <div className="space-y-4">
