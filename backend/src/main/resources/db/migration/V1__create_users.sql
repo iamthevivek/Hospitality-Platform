@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS users (
+    clerk_id    VARCHAR(255) NOT NULL PRIMARY KEY,
+    email       VARCHAR(255) NOT NULL UNIQUE,
+    first_name  VARCHAR(100),
+    last_name   VARCHAR(100),
+    role        VARCHAR(50)  NOT NULL DEFAULT 'GUEST',
+    created_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
