@@ -10,7 +10,6 @@ export default function SignUpPage() {
   const location = useLocation();
   const fromLocation = location.state?.from;
 
-  const [role, setRole] = useState('USER'); // 'USER' | 'ADMIN'
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -71,7 +70,7 @@ export default function SignUpPage() {
         lastName: formData.lastName.trim(),
         email: formData.email.trim(),
         password: formData.password,
-        role: role === 'ADMIN' ? 'ADMIN' : 'GUEST'
+        role: 'GUEST'
       });
       toast.success(`Account created! Welcome, ${user.firstName || 'Traveler'}!`);
       handleNavigateAfterAuth(user);
@@ -123,38 +122,11 @@ export default function SignUpPage() {
         {/* Right Column: Form matching Dribbble */}
         <div className="flex flex-col justify-center px-2 sm:px-6 py-4">
           {/* Avatar Header */}
-          <div className="text-center mb-4">
+          <div className="text-center mb-5">
             <div className="w-14 h-14 rounded-full border-2 border-slate-300 flex items-center justify-center text-slate-400 mx-auto mb-2">
               <User className="w-7 h-7 stroke-[1.5]" />
             </div>
-            <h3 className="font-bold text-lg text-slate-900 leading-tight">SignUp</h3>
-            <p className="text-xs text-slate-400 font-medium">as</p>
-          </div>
-
-          {/* Segmented Role Switcher: User vs Business/Admin */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <button
-              type="button"
-              onClick={() => setRole('USER')}
-              className={`py-2 px-4 text-xs font-bold rounded-lg transition-all ${
-                role === 'USER'
-                  ? 'bg-[#0d7e8a] text-white shadow-xs'
-                  : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              User
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole('ADMIN')}
-              className={`py-2 px-4 text-xs font-bold rounded-lg transition-all ${
-                role === 'ADMIN'
-                  ? 'bg-[#0d7e8a] text-white shadow-xs'
-                  : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              Business
-            </button>
+            <h3 className="font-bold text-xl text-slate-900 leading-tight">Sign Up</h3>
           </div>
 
           {fromLocation && (
@@ -198,7 +170,7 @@ export default function SignUpPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder={role === 'ADMIN' ? 'corporate@company.com' : 'alex.morgan@example.com'}
+                placeholder="alex.morgan@example.com"
                 required
                 className="w-full bg-[#eef0f3] border-0 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-[#0d7e8a]/40 outline-none transition"
               />

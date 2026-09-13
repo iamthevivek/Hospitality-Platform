@@ -10,7 +10,6 @@ export default function SignInPage() {
   const location = useLocation();
   const fromLocation = location.state?.from;
 
-  const [role, setRole] = useState('USER'); // 'USER' | 'ADMIN'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
@@ -59,10 +58,6 @@ export default function SignInPage() {
     }
   };
 
-  const handleRoleChange = (newRole) => {
-    setRole(newRole);
-  };
-
   return (
     <div className="min-h-[calc(100vh-80px)] bg-[#f3f4f6] flex items-center justify-center p-4 sm:p-6 lg:p-10">
       <div className="bg-white rounded-[32px] shadow-2xl shadow-slate-200/90 p-4 sm:p-6 max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch border border-slate-100">
@@ -102,38 +97,11 @@ export default function SignInPage() {
         {/* Right Column: Form matching Dribbble */}
         <div className="flex flex-col justify-center px-2 sm:px-6 py-4">
           {/* Avatar Header */}
-          <div className="text-center mb-4">
+          <div className="text-center mb-6">
             <div className="w-14 h-14 rounded-full border-2 border-slate-300 flex items-center justify-center text-slate-400 mx-auto mb-2">
               <User className="w-7 h-7 stroke-[1.5]" />
             </div>
-            <h3 className="font-bold text-lg text-slate-900 leading-tight">SignIn</h3>
-            <p className="text-xs text-slate-400 font-medium">as</p>
-          </div>
-
-          {/* Segmented Role Switcher: User vs Business/Admin */}
-          <div className="grid grid-cols-2 gap-3 mb-5">
-            <button
-              type="button"
-              onClick={() => handleRoleChange('USER')}
-              className={`py-2 px-4 text-xs font-bold rounded-lg transition-all ${
-                role === 'USER'
-                  ? 'bg-[#0d7e8a] text-white shadow-xs'
-                  : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              User
-            </button>
-            <button
-              type="button"
-              onClick={() => handleRoleChange('ADMIN')}
-              className={`py-2 px-4 text-xs font-bold rounded-lg transition-all ${
-                role === 'ADMIN'
-                  ? 'bg-[#0d7e8a] text-white shadow-xs'
-                  : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              Business
-            </button>
+            <h3 className="font-bold text-xl text-slate-900 leading-tight">Sign In</h3>
           </div>
 
           {fromLocation && (
@@ -156,7 +124,7 @@ export default function SignInPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={role === 'ADMIN' ? 'corporate@company.com' : 'alex.morgan@example.com'}
+                placeholder="alex.morgan@example.com"
                 required
                 className="w-full bg-[#eef0f3] border-0 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-[#0d7e8a]/40 outline-none transition"
               />
