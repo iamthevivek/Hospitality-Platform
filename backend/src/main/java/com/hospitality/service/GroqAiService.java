@@ -35,7 +35,7 @@ public class GroqAiService {
     @Value("${groq.api.key:}")
     private String apiKey;
 
-    @Value("${groq.model:llama-3.3-70b-versatile}")
+    @Value("${groq.model:openai/gpt-oss-120b}")
     private String model;
 
     @Value("${groq.api.url:https://api.groq.com/openai/v1/chat/completions}")
@@ -59,9 +59,14 @@ public class GroqAiService {
             } catch (Exception e) {
                 log.warn("Groq API call with model {} failed: {}. Retrying with backup model...", model, e.getMessage());
                 try {
-                    return callGroqLlm(userMessage, request.getHistory(), "llama-3.1-8b-instant");
+                    return callGroqLlm(userMessage, request.getHistory(), "qwen/qwen3.8-27b");
                 } catch (Exception e2) {
-                    log.warn("Backup Groq model failed: {}. Falling back to internal travel assistant engine.", e2.getMessage());
+                    log.warn("Backup Groq model qwen3.8-27b failed: {}. Retrying with gpt-oss-20b...", e2.getMessage());
+                    try {
+                        return callGroqLlm(userMessage, request.getHistory(), "openai/gpt-oss-20b");
+                    } catch (Exception e3) {
+                        log.warn("All Groq models failed: {}. Falling back to internal engine.", e3.getMessage());
+                    }
                 }
             }
         } else {
@@ -76,9 +81,9 @@ public class GroqAiService {
         String systemPrompt = buildSystemPrompt();
 
         ObjectNode rootNode = objectMapper.createObjectNode();
-        rootNode.put("model", modelToUse != null ? modelToUse : "llama-3.3-70b-versatile");
+        rootNode.put("model", modelToUse != null ? modelToUse : "openai/gpt-oss-120b");
         rootNode.put("temperature", 0.7);
-        rootNode.put("max_tokens", 800);
+        rootNode.put("max_tokens", 1200);
 
         ArrayNode messagesArray = rootNode.putArray("messages");
 
@@ -110,7 +115,7 @@ public class GroqAiService {
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + apiKey)
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
-                .timeout(Duration.ofSeconds(15))
+                .timeout(Duration.ofSeconds(20))
                 .build();
 
         HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
@@ -124,10 +129,14 @@ public class GroqAiService {
         String replyText = resJson.path("choices").path(0).path("message").path("content").asText();
 
         if (replyText == null || replyText.isBlank()) {
+            replyText = resJson.path("choices").path(0).path("message").path("reasoning").asText();
+        }
+
+        if (replyText == null || replyText.isBlank()) {
             throw new RuntimeException("Empty response from Groq");
         }
 
-        return linkifyResponse(replyText, userMessage, "stayease-assistant");
+        return linkifyResponse(replyText, userMessage, modelToUse != null ? modelToUse : "stayease-ai");
     }
 
     private String buildSystemPrompt() {
