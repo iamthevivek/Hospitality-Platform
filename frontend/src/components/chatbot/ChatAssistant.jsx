@@ -39,22 +39,24 @@ function generateAssistantReply(userQuery) {
   }
 
   // 2. Greetings (Hi, Hello, Namaste, Good Morning, etc.)
-  if (
-    q === 'hi' || 
-    q === 'hello' || 
-    q === 'hey' || 
-    q === 'namaste' || 
-    q.startsWith('hi ') || 
-    q.startsWith('hello ') || 
-    q.startsWith('hey ') || 
-    q.includes('good morning') || 
-    q.includes('good evening') || 
-    q.includes('good afternoon')
-  ) {
+  const words = q.split(/\s+/);
+  const isPureGreeting = ['hi', 'hello', 'hey', 'namaste'].includes(q) ||
+    (['hi', 'hello', 'hey', 'namaste'].includes(words[0]) && words.length <= 2) ||
+    q.includes('good morning') || q.includes('good evening') || q.includes('good afternoon');
+
+  if (isPureGreeting) {
     return {
       text: "Namaste & warm welcome to StayEase! 🙏\n\nI am your Travel Assistant. Whether you are looking for a royal palace in Jaipur, a coastal villa in Goa, or a premier city hotel in Mumbai, Delhi, or abroad, I'm here to assist you.\n\nHow can I help you plan your journey today?",
       actionLink: "/hotels",
       actionText: "Browse All Hotels"
+    };
+  }
+
+  if (q.includes('trip') || q.includes('itinerary') || q.includes('tour') || q.includes('plan')) {
+    return {
+      text: "Here is a curated **2-Day Luxury India Itinerary**:\n\n• **Day 1 (Jaipur / Royal Rajasthan)**: Check in to the iconic **Rambagh Palace, Jaipur** (from ₹38,000/night). Tour the Amber Fort, stroll through the royal Mughal gardens, and experience an authentic Rajasthani thali dinner.\n\n• **Day 2 (Udaipur / Lake Romance)**: Journey to **The Oberoi Udaivilas, Udaipur** (from ₹42,000/night) for a private boat arrival across Lake Pichola and sunset dining.\n\n*(Tip: Configure `GROQ_API_KEY` on your server to unlock real-time live generative AI conversations!)*",
+      actionLink: "/hotels?city=Jaipur",
+      actionText: "Explore Jaipur Palaces"
     };
   }
 

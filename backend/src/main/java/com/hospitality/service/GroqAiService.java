@@ -35,7 +35,7 @@ public class GroqAiService {
     @Value("${groq.api.key:}")
     private String apiKey;
 
-    @Value("${groq.model:openai/gpt-oss-120b}")
+    @Value("${groq.model:llama-3.3-70b-versatile}")
     private String model;
 
     @Value("${groq.api.url:https://api.groq.com/openai/v1/chat/completions}")
@@ -59,11 +59,13 @@ public class GroqAiService {
             } catch (Exception e) {
                 log.warn("Groq API call with model {} failed: {}. Retrying with backup model...", model, e.getMessage());
                 try {
-                    return callGroqLlm(userMessage, request.getHistory(), "openai/gpt-oss-20b");
+                    return callGroqLlm(userMessage, request.getHistory(), "llama-3.1-8b-instant");
                 } catch (Exception e2) {
                     log.warn("Backup Groq model failed: {}. Falling back to internal travel assistant engine.", e2.getMessage());
                 }
             }
+        } else {
+            log.info("GROQ_API_KEY is not configured or empty. Using assistant engine.");
         }
 
         // 2. Fallback to built-in travel assistant engine
@@ -74,7 +76,7 @@ public class GroqAiService {
         String systemPrompt = buildSystemPrompt();
 
         ObjectNode rootNode = objectMapper.createObjectNode();
-        rootNode.put("model", modelToUse != null ? modelToUse : "openai/gpt-oss-120b");
+        rootNode.put("model", modelToUse != null ? modelToUse : "llama-3.3-70b-versatile");
         rootNode.put("temperature", 0.7);
         rootNode.put("max_tokens", 800);
 
@@ -220,11 +222,27 @@ public class GroqAiService {
                     .build();
         }
 
-        if (q.equals("hi") || q.equals("hello") || q.equals("hey") || q.equals("namaste") || q.startsWith("hi ") || q.startsWith("hello ")) {
+        String[] words = q.split("\\s+");
+        boolean isPureGreeting = q.equals("hi") || q.equals("hello") || q.equals("hey") || q.equals("namaste")
+                || ((words.length > 0 && (words[0].equals("hi") || words[0].equals("hello") || words[0].equals("hey") || words[0].equals("namaste"))) && words.length <= 2);
+
+        if (isPureGreeting) {
             return AiChatResponse.builder()
                     .reply("Namaste & warm welcome to StayEase! 🙏\n\nI am your StayEase Travel Assistant. Whether you are looking for a royal palace in Jaipur, a coastal villa in Goa, or a premier city hotel in Mumbai, Delhi, or abroad, I'm here to assist you.\n\nHow can I help you plan your journey today?")
                     .suggestedLink("/hotels")
                     .suggestedLinkText("Browse All Hotels")
+                    .modelUsed("stayease-assistant")
+                    .build();
+        }
+
+        if (q.contains("trip") || q.contains("itinerary") || q.contains("tour") || q.contains("plan")) {
+            return AiChatResponse.builder()
+                    .reply("Here is a recommended **2-Day Luxury Golden Triangle Itinerary**:\n\n" +
+                           "• **Day 1 (Jaipur / Royal Rajasthan)**: Arrive and check in to **Rambagh Palace, Jaipur** (from ₹38,000/night). Explore Amber Fort, Hawa Mahal, and enjoy royal Rajasthani dining in the evening.\n\n" +
+                           "• **Day 2 (Udaipur / Lakeside Romance)**: Head to **The Oberoi Udaivilas, Udaipur** (from ₹42,000/night) on Lake Pichola for private boat arrival and sunset lake dining.\n\n" +
+                           "*(Tip: Set `GROQ_API_KEY` on your server to enable live dynamic AI reasoning for bespoke travel planning!)*")
+                    .suggestedLink("/hotels?city=Jaipur")
+                    .suggestedLinkText("View Jaipur Palaces")
                     .modelUsed("stayease-assistant")
                     .build();
         }
