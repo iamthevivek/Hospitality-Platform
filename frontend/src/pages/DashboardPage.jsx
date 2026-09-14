@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useUser } from '../lib/auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Calendar, Clock, IndianRupee, Loader2 } from 'lucide-react';
+import { Calendar, Clock, IndianRupee, Loader2, Heart } from 'lucide-react';
 import { getMyBookings, cancelBooking } from '../lib/api';
+import { useWatchlist } from '../lib/watchlist';
 import BookingCard from '../components/booking/BookingCard';
 import CancelBookingModal from '../components/booking/CancelBookingModal';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -13,6 +14,7 @@ const TABS = ['All', 'Upcoming', 'Past', 'Cancelled'];
 
 export default function DashboardPage() {
   const { user } = useUser();
+  const { count: watchlistCount } = useWatchlist();
   const [activeTab, setActiveTab] = useState('All');
   const [cancelModalBooking, setCancelModalBooking] = useState(null);
   const queryClient = useQueryClient();
@@ -98,7 +100,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="bg-white rounded-2xl shadow-sm p-5 flex items-center gap-4 border border-gray-100">
           <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center">
             <Calendar className="h-6 w-6 text-primary-600" />
@@ -126,6 +128,18 @@ export default function DashboardPage() {
             <p className="text-sm text-gray-500">Total Spent</p>
           </div>
         </div>
+        <Link
+          to="/watchlist"
+          className="bg-white rounded-2xl shadow-sm p-5 flex items-center gap-4 border border-gray-100 hover:border-rose-200 hover:shadow-md transition group"
+        >
+          <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 group-hover:scale-105 transition">
+            <Heart className="h-6 w-6 fill-rose-500 text-rose-500" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-gray-900">{watchlistCount}</p>
+            <p className="text-sm text-gray-500 group-hover:text-rose-600 transition">Saved in Watchlist</p>
+          </div>
+        </Link>
       </div>
 
       {/* Tabs */}

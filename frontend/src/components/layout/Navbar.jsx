@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth, useUser, UserButton } from '../../lib/auth';
-import { Menu, X, Shield, Compass, Calendar } from 'lucide-react';
+import { useWatchlist } from '../../lib/watchlist';
+import { Menu, X, Shield, Compass, Calendar, Heart } from 'lucide-react';
 
 export default function Navbar() {
   const { isSignedIn } = useAuth();
   const { user } = useUser();
+  const { count: watchlistCount } = useWatchlist();
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
@@ -76,17 +78,37 @@ export default function Navbar() {
                   Explore Stays
                 </Link>
                 {isSignedIn && (
-                  <Link 
-                    to="/dashboard" 
-                    className={`px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-all duration-200 ${
-                      isActive('/dashboard') 
-                        ? 'bg-slate-900 text-white shadow-sm shadow-slate-900/15' 
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-                    }`}
-                  >
-                    <Calendar className="w-4 h-4 opacity-70" />
-                    My Bookings
-                  </Link>
+                  <>
+                    <Link 
+                      to="/watchlist" 
+                      className={`px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-all duration-200 ${
+                        isActive('/watchlist') 
+                          ? 'bg-slate-900 text-white shadow-sm shadow-slate-900/15' 
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                      }`}
+                    >
+                      <Heart className={`w-4 h-4 ${isActive('/watchlist') ? 'fill-rose-400 text-rose-400' : 'opacity-70'}`} />
+                      <span>Watchlist</span>
+                      {watchlistCount > 0 && (
+                        <span className={`ml-0.5 text-[11px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                          isActive('/watchlist') ? 'bg-white text-slate-900' : 'bg-rose-100 text-rose-600'
+                        }`}>
+                          {watchlistCount}
+                        </span>
+                      )}
+                    </Link>
+                    <Link 
+                      to="/dashboard" 
+                      className={`px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-all duration-200 ${
+                        isActive('/dashboard') 
+                          ? 'bg-slate-900 text-white shadow-sm shadow-slate-900/15' 
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                      }`}
+                    >
+                      <Calendar className="w-4 h-4 opacity-70" />
+                      My Bookings
+                    </Link>
+                  </>
                 )}
               </>
             )}
@@ -163,15 +185,36 @@ export default function Navbar() {
                 Explore Stays
               </Link>
               {isSignedIn && (
-                <Link 
-                  to="/dashboard" 
-                  onClick={() => setIsOpen(false)} 
-                  className={`block px-4 py-2.5 rounded-xl font-semibold text-sm ${
-                    isActive('/dashboard') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  My Bookings
-                </Link>
+                <>
+                  <Link 
+                    to="/watchlist" 
+                    onClick={() => setIsOpen(false)} 
+                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl font-semibold text-sm ${
+                      isActive('/watchlist') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Heart className={`w-4 h-4 ${isActive('/watchlist') ? 'fill-rose-400 text-rose-400' : 'text-slate-400'}`} />
+                      Watchlist
+                    </span>
+                    {watchlistCount > 0 && (
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                        isActive('/watchlist') ? 'bg-white text-slate-900' : 'bg-rose-100 text-rose-600'
+                      }`}>
+                        {watchlistCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link 
+                    to="/dashboard" 
+                    onClick={() => setIsOpen(false)} 
+                    className={`block px-4 py-2.5 rounded-xl font-semibold text-sm ${
+                      isActive('/dashboard') ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    My Bookings
+                  </Link>
+                </>
               )}
             </div>
           )}

@@ -106,7 +106,7 @@ export default function SignInPage() {
 
           {fromLocation && (
             <div className="mb-4 p-3 bg-teal-50 border border-teal-200 rounded-xl text-teal-800 text-xs font-medium">
-              Please sign in to proceed directly to your room reservation.
+              {location.state?.message || 'Please sign in to proceed directly to your room reservation.'}
             </div>
           )}
 

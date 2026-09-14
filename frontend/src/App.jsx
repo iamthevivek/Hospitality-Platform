@@ -9,6 +9,7 @@ import HotelDetailPage from './pages/HotelDetailPage';
 import BookingPage from './pages/BookingPage';
 import BookingConfirmPage from './pages/BookingConfirmPage';
 import DashboardPage from './pages/DashboardPage';
+import WatchlistPage from './pages/WatchlistPage';
 import AdminPage from './pages/AdminPage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="/book/:roomId" element={<CustomerRoute><ProtectedRoute><BookingPage /></ProtectedRoute></CustomerRoute>} />
           <Route path="/booking/confirm" element={<CustomerRoute><ProtectedRoute><BookingConfirmPage /></ProtectedRoute></CustomerRoute>} />
           <Route path="/dashboard" element={<CustomerRoute><ProtectedRoute><DashboardPage /></ProtectedRoute></CustomerRoute>} />
+          <Route path="/watchlist" element={<CustomerRoute><ProtectedRoute><WatchlistPage /></ProtectedRoute></CustomerRoute>} />
           <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
           <Route path="/about" element={<CustomerRoute><AboutPage /></CustomerRoute>} />
           <Route path="/contact" element={<CustomerRoute><ContactPage /></CustomerRoute>} />

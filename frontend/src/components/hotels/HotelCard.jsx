@@ -1,10 +1,42 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { MapPin, Heart, Star, ArrowUpRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { useAuth } from '../../lib/auth';
+import { useWatchlist } from '../../lib/watchlist';
 
 export default function HotelCard({ hotel }) {
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { isSignedIn } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isInWatchlist, toggleWatchlist } = useWatchlist();
+
   if (!hotel) return null;
+
+  const isFavorite = isInWatchlist(hotel.id);
+
+  const handleFavoriteClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isSignedIn) {
+      toast.error('Please sign in to access your watchlist');
+      navigate('/sign-in', {
+        state: {
+          from: location,
+          message: 'Please sign in to save hotels to your watchlist.',
+        },
+      });
+      return;
+    }
+
+    const { added } = toggleWatchlist(hotel);
+    if (added) {
+      toast.success(`Saved "${hotel.name}" to your watchlist ❤️`);
+    } else {
+      toast(`Removed "${hotel.name}" from watchlist`);
+    }
+  };
 
   const { id, name, city, country, starRating, averageRating, rating, amenities, priceFrom, price, imageUrls } = hotel;
 
@@ -48,10 +80,7 @@ export default function HotelCard({ hotel }) {
           {/* Top-right Favorite Heart */}
           <button
             type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              setIsFavorite(!isFavorite);
-            }}
+            onClick={handleFavoriteClick}
             className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/80 hover:bg-white backdrop-blur-md flex items-center justify-center text-slate-700 transition duration-200 shadow-sm"
             aria-label="Save to favorites"
           >

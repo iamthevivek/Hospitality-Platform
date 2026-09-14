@@ -1,18 +1,23 @@
 import React, { useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getHotelById, getAvailableRooms, getHotelReviews } from '../lib/api';
 import RoomCard from '../components/hotels/RoomCard';
 import ReviewCard from '../components/hotels/ReviewCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import StarRating from '../components/common/StarRating';
-import { MapPin, Wifi, Coffee, Dumbbell, Car, Search } from 'lucide-react';
+import { MapPin, Wifi, Coffee, Dumbbell, Car, Search, Heart } from 'lucide-react';
 import { useAuth } from '../lib/auth';
+import { useWatchlist } from '../lib/watchlist';
+import toast from 'react-hot-toast';
 
 export default function HotelDetailPage() {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isSignedIn } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isInWatchlist, toggleWatchlist } = useWatchlist();
   
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
   const dayAfterTomorrow = new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0];
@@ -60,6 +65,25 @@ export default function HotelDetailPage() {
     setSearchParams(newDates);
   };
 
+  const handleToggleWatchlist = () => {
+    if (!isSignedIn) {
+      toast.error('Please sign in to access your watchlist');
+      navigate('/sign-in', {
+        state: {
+          from: location,
+          message: 'Please sign in to save hotels to your watchlist.',
+        },
+      });
+      return;
+    }
+    const { added } = toggleWatchlist(hotel);
+    if (added) {
+      toast.success(`Saved "${hotel.name}" to your watchlist ❤️`);
+    } else {
+      toast(`Removed "${hotel.name}" from watchlist`);
+    }
+  };
+
   if (isLoadingHotel) return <div className="min-h-screen flex justify-center items-center"><LoadingSpinner className="w-12 h-12" /></div>;
   if (!hotel || (!hotel.name && !hotel.id)) return <div className="min-h-screen flex justify-center items-center text-xl text-gray-600">Hotel not found</div>;
 
@@ -95,6 +119,18 @@ export default function HotelDetailPage() {
             <span className="bg-white/20 backdrop-blur-md px-3 py-1 text-xs font-bold rounded-full text-white uppercase tracking-wider">
               Verified Luxury Partner
             </span>
+            <button
+              type="button"
+              onClick={handleToggleWatchlist}
+              className={`backdrop-blur-md px-3.5 py-1 text-xs font-bold rounded-full flex items-center space-x-1.5 transition border ${
+                isInWatchlist(hotel.id)
+                  ? 'bg-rose-500/30 border-rose-400/60 text-rose-200 hover:bg-rose-500/40'
+                  : 'bg-white/20 border-white/20 text-white hover:bg-white/30'
+              }`}
+            >
+              <Heart className={`w-3.5 h-3.5 transition ${isInWatchlist(hotel.id) ? 'fill-rose-400 text-rose-400' : 'text-white'}`} />
+              <span>{isInWatchlist(hotel.id) ? 'In Watchlist' : 'Add to Watchlist'}</span>
+            </button>
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-3 tracking-tight">
             {hotel.name}
