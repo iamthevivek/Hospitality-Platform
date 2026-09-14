@@ -92,11 +92,15 @@ export const cancelBooking = (id) =>
   api.put(`/api/bookings/${id}/cancel`).then(unwrap);
 
 // ─── Payments ─────────────────────────────────────────────────
-export const createPaymentIntent = (data) =>
-  api.post('/api/payments/create-intent', data).then(unwrap);
+export const createPaymentIntent = (data) => {
+  const payload = typeof data === 'object' ? data : { bookingId: data };
+  return api.post('/api/payments/create-intent', payload).then(unwrap);
+};
 
-export const confirmDemoPayment = (data) =>
-  api.post('/api/payments/confirm-demo', data).then(unwrap);
+export const confirmDemoPayment = (data) => {
+  const bookingId = typeof data === 'object' ? (data.bookingId || data.id) : data;
+  return api.post(`/api/payments/confirm-demo/${bookingId}`).then(unwrap);
+};
 
 // ─── Reviews ──────────────────────────────────────────────────
 export const createReview = (data) =>

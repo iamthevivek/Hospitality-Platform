@@ -120,7 +120,7 @@ export default function BookingPage() {
       navigate(`/booking/confirm?payment_intent=${booking.id || 'txn_success'}&redirect_status=succeeded`);
     } catch (err) {
       console.error(err);
-      toast.error('Payment failed. Please retry.');
+      toast.error(err.response?.data?.message || 'Payment failed. Please retry.');
     } finally {
       setIsProcessingPayment(false);
     }
