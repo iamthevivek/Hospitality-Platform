@@ -335,6 +335,71 @@ function FormattedMessageText({ text }) {
   );
 }
 
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
+
+async function callDirectGroq(query, history) {
+  if (!GROQ_API_KEY) return null;
+
+  const systemPrompt = `You are the StayEase Travel Assistant, a friendly, luxurious, and knowledgeable hotel booking concierge for StayEase (India's premier modern luxury hospitality platform).
+You assist guests with discovering iconic heritage royal palaces in Rajasthan, beach retreats in Goa, 5-star properties in Mumbai, Delhi, Udaipur, and world-class getaways.
+All hotel rates should be quoted in Indian Rupees (₹ INR).
+Give detailed, beautifully formatted travel recommendations, curated 2-4 day itineraries, and hotel room suggestions with warm hospitality.`;
+
+  const messagesPayload = [
+    { role: 'system', content: systemPrompt },
+    ...history.slice(-6).map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
+    { role: 'user', content: query }
+  ];
+
+  const models = ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'openai/gpt-oss-20b'];
+
+  for (const model of models) {
+    try {
+      const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GROQ_API_KEY}`
+        },
+        body: JSON.stringify({
+          model,
+          messages: messagesPayload,
+          max_tokens: 1200,
+          temperature: 0.7
+        })
+      });
+
+      if (!resp.ok) continue;
+      const data = await resp.json();
+      const choice = data.choices?.[0]?.message;
+      let reply = choice?.content?.trim() || choice?.reasoning?.trim();
+      if (reply) {
+        let suggestedLink = '/hotels';
+        let suggestedLinkText = 'Explore All Stays';
+        const lower = (query + ' ' + reply).toLowerCase();
+        if (lower.includes('jaipur')) {
+          suggestedLink = '/hotels?city=Jaipur';
+          suggestedLinkText = 'View Jaipur Palaces';
+        } else if (lower.includes('goa')) {
+          suggestedLink = '/hotels?city=Goa';
+          suggestedLinkText = 'View Goa Resorts';
+        } else if (lower.includes('mumbai')) {
+          suggestedLink = '/hotels?city=Mumbai';
+          suggestedLinkText = 'View Mumbai Hotels';
+        } else if (lower.includes('udaipur')) {
+          suggestedLink = '/hotels?city=Udaipur';
+          suggestedLinkText = 'View Udaipur Palaces';
+        }
+
+        return { reply, suggestedLink, suggestedLinkText };
+      }
+    } catch (e) {
+      console.warn(`Direct Groq model ${model} failed, trying next...`);
+    }
+  }
+  return null;
+}
+
 export default function ChatAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
@@ -367,9 +432,10 @@ export default function ChatAssistant() {
         content: m.text
       }));
 
+    // 1. Try Backend first
     try {
       const res = await sendAiChat(query, history);
-      if (res && res.reply) {
+      if (res && res.reply && res.modelUsed && res.modelUsed !== 'stayease-assistant') {
         setMessages((prev) => [
           ...prev,
           {
@@ -383,10 +449,30 @@ export default function ChatAssistant() {
         return;
       }
     } catch (err) {
-      console.warn('AI Backend call failed, using local assistant fallback:', err);
+      console.warn('Backend AI not responding with live model, trying direct Groq call...');
     }
 
-    // Fallback to local assistant engine
+    // 2. Direct Groq API live call (ensures instant real live AI without needing server restart)
+    try {
+      const groqRes = await callDirectGroq(query, history);
+      if (groqRes && groqRes.reply) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            text: groqRes.reply,
+            actionLink: groqRes.suggestedLink,
+            actionText: groqRes.suggestedLinkText
+          }
+        ]);
+        setIsTyping(false);
+        return;
+      }
+    } catch (groqErr) {
+      console.warn('Direct Groq call failed:', groqErr);
+    }
+
+    // 3. Fallback to local assistant engine if all else fails
     const response = generateAssistantReply(query);
     setMessages((prev) => [
       ...prev,
